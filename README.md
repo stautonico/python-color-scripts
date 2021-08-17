@@ -52,7 +52,6 @@ If a new version exists, it will automatically install
      --list                List the names of all available art pieces
      --random-color-mode, -r
                            Use a random color mode
-     --not-sus             Guarantees you won't be the imposter
      --ignore-distro, -i   Ignore distro specific artworks
      --version, -V         Show version information
      --update              Try to update to the latest version

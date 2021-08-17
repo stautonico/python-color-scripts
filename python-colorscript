@@ -8,6 +8,7 @@ import sys
 import zlib
 from json import loads
 from random import choice
+from shutil import rmtree
 
 
 # This portion of the script belongs to the user "kui" (https://github.com/kui) on github
@@ -53,7 +54,8 @@ def ansi_color(code):
 # END KUI'S CODE
 
 if __name__ == '__main__':
-    with open("/etc/art.json", "r") as f:
+    with open("/etc/python-colorscript/art.json", "r") as f:
+    # with open("art.json", "r") as f:
         data = loads(f.read())
 
     parser = argparse.ArgumentParser(description="Draw some ASCII art!")
@@ -78,8 +80,14 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.uninstall:
-        os.remove(__file__)
-        print("Thanks for using python-colorscript!")
+        if os.getuid() != 0:
+            print("Only root has the permissions to delete the required files, please run with sudo")
+            exit()
+        else:
+            rmtree("/etc/python-colorscript")
+            os.remove("/usr/bin/python-colorscript")
+            print("Thanks for using python-colorscript!")
+            exit()
 
     if args.list:
         print("Available art pieces:")

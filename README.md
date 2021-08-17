@@ -20,11 +20,23 @@ Installation is easy, just a "simple" one-liner
    sudo wget https://raw.githubusercontent.com/stautonico/python-color-scripts/main/python-colorscript -P /usr/bin/ && sudo chmod +x /usr/bin/python-colorscript && sudo mkdir /etc/python-colorscript && sudo wget https://raw.githubusercontent.com/stautonico/python-color-scripts/main/art.json -P /etc/python-colorscript && sudo chmod 666 /etc/python-colorscript/art.json
 ```
 
+# Updating
+
+This script has a built-in updater
+
+To update, simply:
+
+```shell
+   sudo python-colorscript --update
+```
+
+If a new version exists, it will automatically install
+
 # Usage
 
 ```shell
-   usage: python-colorscript [-h] [--16] [--256] [--left-padding LEFT_PADDING] [--top-padding TOP_PADDING] [--art ART]
-                             [--list] [--random-color-mode] [--not-sus] [--ignore-distro] [--uninstall]
+   usage: python-colorscript [-h] [--16] [--256] [--left-padding LEFT_PADDING] [--top-padding TOP_PADDING] [--art ART] [--list]
+                             [--random-color-mode] [--not-sus] [--ignore-distro] [--version] [--update] [--uninstall]
    
    Draw some ASCII art!
    
@@ -42,6 +54,8 @@ Installation is easy, just a "simple" one-liner
                            Use a random color mode
      --not-sus             Guarantees you won't be the imposter
      --ignore-distro, -i   Ignore distro specific artworks
+     --version, -V         Show version information
+     --update              Try to update to the latest version
      --uninstall           Uninstall the script from your system
 ```
 
@@ -49,6 +63,13 @@ and more secret arguments that you'll just have to discover on your own!
 
 ### Recommended Use Case
 You can add this file to the end of your .zshrc or .bashrc to get some ASCII artwork every time you open a terminal!
+
+# Uninstallation
+To uninstall, simply:
+
+```shell
+   sudo python-colorscript --uninstall
+```
 
 # Adding New Art
 

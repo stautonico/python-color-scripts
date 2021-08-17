@@ -9,6 +9,11 @@ import zlib
 from json import loads
 from random import choice
 from shutil import rmtree
+from subprocess import DEVNULL, STDOUT, check_call
+
+import requests
+
+__VERSION__ = "1.0.1"
 
 
 # This portion of the script belongs to the user "kui" (https://github.com/kui) on github
@@ -53,9 +58,18 @@ def ansi_color(code):
 
 # END KUI'S CODE
 
+
+def is_outdated(latest, current):
+    latest = tuple([int(x) for x in latest.split(".")])
+    current = tuple([int(x) for x in current.split(".")])
+
+    return latest > current
+
+
 if __name__ == '__main__':
-    with open("/etc/python-colorscript/art.json", "r") as f:
-    # with open("art.json", "r") as f:
+    artjson_location = "art.json" if os.getenv(
+        "PYTHONCOLORSCRIPTDEBUG") == "true" else "/etc/python-colorscript/art.json"
+    with open(artjson_location, "r") as f:
         data = loads(f.read())
 
     parser = argparse.ArgumentParser(description="Draw some ASCII art!")
@@ -74,10 +88,56 @@ if __name__ == '__main__':
                         help="Guarantees you won't be the imposter")
     parser.add_argument("--ignore-distro", "-i", action="store_true", dest="ignoredistro", required=False,
                         help="Ignore distro specific artworks")
+    parser.add_argument("--version", "-V", action="store_true", required=False, help="Show version information")
+    parser.add_argument("--update", action="store_true", required=False, help="Try to update to the latest version")
     parser.add_argument("--uninstall", action="store_true", required=False,
                         help="Uninstall the script from your system")
 
     args = parser.parse_args()
+
+    if args.version:
+        print("python-colorscript {}".format(__VERSION__))
+        exit()
+
+    if args.update:
+        if os.getuid() != 0:
+            print("Only root has the permissions to update the required files, please run with sudo")
+            exit()
+        else:
+            response = requests.get("https://api.github.com/repos/stautonico/python-color-scripts/releases/latest")
+
+            latest_version = response.json()["name"]
+
+            old = is_outdated(latest_version, __VERSION__)
+
+            if old:
+                print("An update is available! {} -> {}".format(__VERSION__, latest_version))
+                print("Downloading new version...")
+                check_call(
+                    ["wget", "{}".format(response.json()['tarball_url']), "-O", "/tmp/python-colorscript.tar.gz"],
+                    stdout=DEVNULL, stderr=STDOUT)
+                print("Extracting...")
+                check_call(["tar", "-xzvf", "/tmp/python-colorscript.tar.gz", "-C", "/tmp"], stdout=DEVNULL,
+                           stderr=STDOUT)
+                # Find the name of the new file
+                new_filenames = [file for file in os.listdir("/tmp/") if
+                                 file.startswith("stautonico-python-color-scripts")]
+                if len(new_filenames) != 1:
+                    print("Something went wrong when trying to update!")
+                    exit(1)
+                else:
+                    # Copy the script and the art.json file
+                    print("Installing..")
+                    check_call(
+                        ["cp", "/tmp/{}/python-colorscript".format(new_filenames[0]), "/usr/bin/python-colorscript"],
+                        stdout=DEVNULL, stderr=STDOUT)
+                    check_call(["cp", "/tmp/{}/art.json".format(new_filenames[0]), "/etc/python-colorscript/art.json"],
+                               stdout=DEVNULL, stderr=STDOUT)
+
+                    print("Successfully updated to version {}!".format(latest_version))
+            else:
+                print("Your software is up to date! ({})".format(__VERSION__))
+            exit()
 
     if args.uninstall:
         if os.getuid() != 0:
@@ -101,10 +161,19 @@ if __name__ == '__main__':
         choices = list(data.keys())
 
         if not args.ignoredistro:
-            with open("/etc/lsb-release", "r") as f:
-                distro_file = f.read().replace("\n", "=")
-                split_distro_file = distro_file.split("=")
-                distro = split_distro_file[split_distro_file.index("DISTRIB_ID") + 1]
+            try:
+                with open("/etc/lsb-release", "r") as f:
+                    distro_file = f.read().replace("\n", "=")
+                    split_distro_file = distro_file.split("=")
+                    distro = split_distro_file[split_distro_file.index("DISTRIB_ID") + 1]
+            except FileNotFoundError:
+                try:
+                    with open("/etc/os-release", "r") as f:
+                        distro_file = f.read().replace("\n", "=")
+                        split_distro_file = distro_file.split("=")
+                        distro = split_distro_file[split_distro_file.index("ID") + 1]
+                except FileNotFoundError:
+                    distro = "Generic"
 
             if distro.lower() != "arch":
                 choices.remove("archbtw")

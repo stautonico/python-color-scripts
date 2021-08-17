@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+from __future__ import print_function
+
+import argparse
+import base64
+import os
+import sys
+import zlib
+from json import loads
+from random import choice
+
+
+# This portion of the script belongs to the user "kui" (https://github.com/kui) on github
+# This project wouldn't be possible without their amazing tool: "ansi_pixels"
+# This script is a modified version of their tool, but recoded for python3 and merged
+# with this script so it can all fit in one script for simple distribution
+# Thanks kui, you're awesome!
+# Original source: https://github.com/kui/ansi_pixels
+
+# START KUI'S CODE
+
+# Renamed main to "draw_ansi"
+def draw_ansi(b64, left_padding=0, top_padding=0):
+    p = convert(b64)
+    for x in range(top_padding):
+        print()
+    for row in p:
+        sys.stdout.write(" " * left_padding)
+        for code in row:
+            sys.stdout.write('%s  ' % ansi_color(code))
+        print(ansi_color(None))
+
+
+def convert(b64):
+    zipped = base64.urlsafe_b64decode(str(b64))
+    json_str = zlib.decompress(zipped)
+    j = loads(json_str)
+    if type(j) is dict:  # Changed this (python2 type checking was different)
+        return j['pixels']
+    elif type(j) is list:  # Changed this (python2 type checking was different)
+        return j
+    else:
+        sys.exit('Invalid JSON: %s' % type(j))
+
+
+def ansi_color(code):
+    if code == None:
+        return '\033[0m'
+    else:
+        return '\033[48;5;%dm' % code
+
+
+# END KUI'S CODE
+
+if __name__ == '__main__':
+    with open("/etc/art.json", "r") as f:
+        data = loads(f.read())
+
+    parser = argparse.ArgumentParser(description="Draw some ASCII art!")
+    parser.add_argument("--16", dest="sixteen", action="store_true", help="Draw in 16 colors mode")
+    parser.add_argument("--256", dest="twofiftysix", action="store_true", help="Draw in 256 colors mode")
+    parser.add_argument('--left-padding', "-l", dest="left_padding", type=int, required=False,
+                        help='Amount of space to add to the left side of the art', default=0)
+    parser.add_argument('--top-padding', "-t", dest="top_padding", type=int, required=False,
+                        help='Amount of space to add to the top of the art', default=0)
+    parser.add_argument("--art", type=str, required=False, help="Draw a specific piece of art. View all using --list")
+    parser.add_argument("--list", action="store_true", required=False,
+                        help="List the names of all available art pieces")
+    parser.add_argument("--random-color-mode", "-r", action="store_true", dest="random_color_mode", required=False,
+                        help="Use a random color mode")
+    parser.add_argument("--not-sus", action="store_true", dest="notsus", required=False,
+                        help="Guarantees you won't be the imposter")
+    parser.add_argument("--ignore-distro", "-i", action="store_true", dest="ignoredistro", required=False,
+                        help="Ignore distro specific artworks")
+    parser.add_argument("--uninstall", action="store_true", required=False,
+                        help="Uninstall the script from your system")
+
+    args = parser.parse_args()
+
+    if args.uninstall:
+        os.remove(__file__)
+        print("Thanks for using python-colorscript!")
+
+    if args.list:
+        print("Available art pieces:")
+        for x in data.keys():
+            print(x)
+        exit()
+
+    if args.art:
+        art = args.art.lower()
+    else:
+        choices = list(data.keys())
+
+        if not args.ignoredistro:
+            with open("/etc/lsb-release", "r") as f:
+                distro_file = f.read().replace("\n", "=")
+                split_distro_file = distro_file.split("=")
+                distro = split_distro_file[split_distro_file.index("DISTRIB_ID") + 1]
+
+            if distro.lower() != "arch":
+                choices.remove("archbtw")
+
+        if args.notsus:
+            choices.remove("sus")
+        art = choice(choices)
+
+    if args.random_color_mode:
+        colormode = choice(["8", "16", "256"])
+    else:
+        colormode = "16" if args.sixteen else "256" if args.twofiftysix else "8"
+
+    b64 = data[art][colormode]
+
+    draw_ansi(b64, args.left_padding, args.top_padding)

@@ -87,7 +87,9 @@ if __name__ == '__main__':
     parser.add_argument("--not-sus", action="store_true", dest="notsus", required=False,
                         help="Guarantees you won't be the imposter")
     parser.add_argument("--ignore-distro", "-i", action="store_true", dest="ignoredistro", required=False,
-                        help="Ignore distro specific artworks")
+                        help="Show distro specific artworks on all distros")
+    parser.add_argument("--blacklist", "-b",
+                        help="Remove specific artworks from random pool. Note: Multiple items need to be surrounded by quotes")
     parser.add_argument("--version", "-V", action="store_true", required=False, help="Show version information")
     parser.add_argument("--update", action="store_true", required=False, help="Try to update to the latest version")
     parser.add_argument("--uninstall", action="store_true", required=False,
@@ -180,6 +182,16 @@ if __name__ == '__main__':
 
         if args.notsus:
             choices.remove("sus")
+
+        if args.blacklist:
+            blacklist = args.blacklist.split(" ")
+            for item in blacklist:
+                try:
+                    choices.remove(item)
+                except ValueError:
+                    # Invalid art, just ignore and continue
+                    pass
+
         art = choice(choices)
 
     if args.random_color_mode:

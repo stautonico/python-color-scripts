@@ -17,7 +17,7 @@ people use it when their terminal opens. This is a modified/custom version of th
 Installation is easy, just a simple one-liner
 
 ```shell
-   bash <(curl -s https://raw.githubusercontent.com/stautonico/python-color-scripts/main/install.sh)
+wget -qO - https://raw.githubusercontent.com/stautonico/python-color-scripts/main/install.sh | sudo bash
 ```
 
 # Updating
@@ -27,7 +27,7 @@ This script has a built-in updater.
 To update, simply:
 
 ```shell
-   sudo python-colorscript --update
+sudo python-colorscript --update
 ```
 
 If a new version exists, it will automatically install.
@@ -35,30 +35,30 @@ If a new version exists, it will automatically install.
 # Usage
 
 ```shell
-   usage: python-colorscript [-h] [--16] [--256] [--left-padding LEFT_PADDING] [--top-padding TOP_PADDING] [--art ART]
-                             [--list] [--random-color-mode] [--ignore-distro] [--blacklist BLACKLIST] [--version]
-                             [--update] [--uninstall]
-   
-   Draw some ASCII art!
-   
-   optional arguments:
-     -h, --help            show this help message and exit
-     --16                  Draw in 16 colors mode
-     --256                 Draw in 256 colors mode
-     --left-padding LEFT_PADDING, -l LEFT_PADDING
-                           Amount of space to add to the left side of the art
-     --top-padding TOP_PADDING, -t TOP_PADDING
-                           Amount of space to add to the top of the art
-     --art ART             Draw a specific piece of art. View all using --list
-     --list                List the names of all available art pieces
-     --random-color-mode, -r
-                           Use a random color mode
-     --ignore-distro, -i   Show distro specific artworks on all distros
-     --blacklist BLACKLIST, -b BLACKLIST
-                           Remove specific artworks from random pool. Note: Multiple items need to be surrounded by quotes
-     --version, -V         Show version information
-     --update              Try to update to the latest version
-     --uninstall           Uninstall the script from your system
+usage: python-colorscript [-h] [--16] [--256] [--left-padding LEFT_PADDING] [--top-padding TOP_PADDING] [--art ART]
+                          [--list] [--random-color-mode] [--ignore-distro] [--blacklist BLACKLIST] [--version]
+                          [--update] [--uninstall]
+
+Draw some ASCII art!
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --16                  Draw in 16 colors mode
+  --256                 Draw in 256 colors mode
+  --left-padding LEFT_PADDING, -l LEFT_PADDING
+                        Amount of space to add to the left side of the art
+  --top-padding TOP_PADDING, -t TOP_PADDING
+                        Amount of space to add to the top of the art
+  --art ART             Draw a specific piece of art. View all using --list
+  --list                List the names of all available art pieces
+  --random-color-mode, -r
+                        Use a random color mode
+  --ignore-distro, -i   Show distro specific artworks on all distros
+  --blacklist BLACKLIST, -b BLACKLIST
+                        Remove specific artworks from random pool. Note: Multiple items need to be surrounded by quotes
+  --version, -V         Show version information
+  --update              Try to update to the latest version
+  --uninstall           Uninstall the script from your system
 ```
 
 and more secret arguments that you'll just have to discover on your own!
@@ -76,7 +76,7 @@ You can add this file to the end of your .zshrc or .bashrc to get some ASCII art
 To uninstall, simply:
 
 ```shell
-   sudo python-colorscript --uninstall
+sudo python-colorscript --uninstall
 ```
 
 # Adding New Art

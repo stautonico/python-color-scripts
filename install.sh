@@ -44,7 +44,8 @@ main() {
   git clone https://github.com/stautonico/python-color-scripts /tmp/python-color-scripts 2> /dev/null
 
   msg "Installing files"
-  install_files
+  sudo install_files
+  /usr/bin/env pip install requests
 
   msg "Removing temporary files"
   rm -r /tmp/python-color-scripts

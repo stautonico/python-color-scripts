@@ -17,7 +17,7 @@ people use it when their terminal opens. This is a modified/custom version of th
 Installation is easy, just a simple one-liner
 
 ```shell
-wget -qO - https://raw.githubusercontent.com/stautonico/python-color-scripts/main/install.sh | bash
+wget -qO - https://raw.githubusercontent.com/stautonico/python-color-scripts/main/install.sh | sudo bash
 ```
 
 # Updating

@@ -108,7 +108,7 @@ if __name__ == '__main__':
         else:
             response = requests.get("https://api.github.com/repos/stautonico/python-color-scripts/releases/latest")
 
-            latest_version = response.json()["name"]
+            latest_version = response.json()["tag_name"]
 
             old = is_outdated(latest_version, __VERSION__)
 

@@ -34,6 +34,9 @@ If a new version exists, it will automatically install.
 
 # Usage
 
+The simplest way to get started is just to type `python-colorscript` in your terminal to display a random artwork!
+
+### Command Options
 ```shell
 usage: python-colorscript [-h] [--16] [--256] [--left-padding LEFT_PADDING] [--top-padding TOP_PADDING] [--art ART]
                           [--list] [--random-color-mode] [--ignore-distro] [--blacklist BLACKLIST] [--version]

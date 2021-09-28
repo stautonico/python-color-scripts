@@ -199,6 +199,10 @@ if __name__ == '__main__':
     else:
         colormode = "16" if args.sixteen else "256" if args.twofiftysix else "8"
 
-    b64 = data[art][colormode]
+    if art in data:
+        b64 = data[art][colormode]
+    else:
+        print("'" + art + "'" + " isn't a valid artwork. Use '--list' to get a list of all valid artworks")
+        exit(1)
 
     draw_ansi(b64, args.left_padding, args.top_padding)

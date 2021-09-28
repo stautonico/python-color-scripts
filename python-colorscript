@@ -13,7 +13,7 @@ from subprocess import DEVNULL, STDOUT, check_call
 
 import requests
 
-__VERSION__ = "1.0.2"
+__VERSION__ = "1.0.3"
 
 
 # This portion of the script belongs to the user "kui" (https://github.com/kui) on github
@@ -200,7 +200,12 @@ if __name__ == '__main__':
         colormode = "16" if args.sixteen else "256" if args.twofiftysix else "8"
 
     if art in data:
-        b64 = data[art][colormode]
+        base64_color_modes = data[art]
+        if colormode in base64_color_modes:
+            b64 = base64_color_modes[colormode]
+        else:
+            print("No " + colormode + " color artwork exists for '" + art + "'. You can add one to 'art.json' or try a different using a color mode")
+            exit(1)
     else:
         print("'" + art + "'" + " isn't a valid artwork. Use '--list' to get a list of all valid artworks")
         exit(1)

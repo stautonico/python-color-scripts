@@ -9,11 +9,11 @@ import zlib
 from json import loads
 from random import choice
 from shutil import rmtree
-from subprocess import STDOUT, check_call
+from subprocess import STDOUT, DEVNULL, check_call
 
 import requests
 
-__VERSION__ = "1.0.4"
+__VERSION__ = "1.1.0"
 
 
 # This portion of the script belongs to the user "kui" (https://github.com/kui) on github
@@ -114,30 +114,11 @@ if __name__ == '__main__':
 
             if old:
                 print("An update is available! {} -> {}".format(__VERSION__, latest_version))
-                check_call("wget -qO - https://raw.githubusercontent.com/stautonico/python-color-scripts/main/install.sh | sudo bash", stdout=STDOUT, stderr=STDOUT)
-                # print("Downloading new version...")
-                # check_call(
-                #     ["wget", "{}".format(response.json()['tarball_url']), "-O", "/tmp/python-colorscript.tar.gz"],
-                #     stdout=DEVNULL, stderr=STDOUT)
-                # print("Extracting...")
-                # check_call(["tar", "-xzvf", "/tmp/python-colorscript.tar.gz", "-C", "/tmp"], stdout=DEVNULL,
-                #            stderr=STDOUT)
-                # # Find the name of the new file
-                # new_filenames = [file for file in os.listdir("/tmp/") if
-                #                  file.startswith("stautonico-python-color-scripts")]
-                # if len(new_filenames) != 1:
-                #     print("Something went wrong when trying to update!")
-                #     exit(1)
-                # else:
-                #     # Copy the script and the art.json file
-                #     print("Installing..")
-                #     check_call(
-                #         ["cp", "/tmp/{}/python-colorscript".format(new_filenames[0]), "/usr/bin/python-colorscript"],
-                #         stdout=DEVNULL, stderr=STDOUT)
-                #     check_call(["cp", "/tmp/{}/art.json".format(new_filenames[0]), "/etc/python-colorscript/art.json"],
-                #                stdout=DEVNULL, stderr=STDOUT)
-                #
-                #     print("Successfully updated to version {}!".format(latest_version))
+                check_call(
+                    "wget -qO /tmp/install-python-colorscript.sh https://raw.githubusercontent.com/stautonico/python-color-scripts/main/install.sh",
+                    stdout=DEVNULL, stderr=STDOUT)
+                check_call("chmod +x /tmp/install-python-colorscript.sh", stdout=DEVNULL, stderr=STDOUT)
+                check_call("sudo /tmp/install-python-colorscript.sh", stdout=STDOUT, stderr=STDOUT)
             else:
                 print("Your software is up to date! ({})".format(__VERSION__))
             exit()
@@ -208,7 +189,8 @@ if __name__ == '__main__':
         if colormode in base64_color_modes:
             b64 = base64_color_modes[colormode]
         else:
-            print("No " + colormode + " color artwork exists for '" + art + "'. You can add one to 'art.json' or try a different using a color mode")
+            print(
+                "No " + colormode + " color artwork exists for '" + art + "'. You can add one to 'art.json' or try a different using a color mode")
             exit(1)
     else:
         print("'" + art + "'" + " isn't a valid artwork. Use '--list' to get a list of all valid artworks")

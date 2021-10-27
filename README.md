@@ -113,6 +113,11 @@ Also, note that at least one color mode is required, but not all three need to b
 
 You can add your art to this repo by submitting a pull request with your changes.
 
+# Troubleshooting
+### ZSH Completions Not Working
+* Make sure /usr/share/zsh/functions/Completion/Unix/_python-colorscript exists
+* Add `autoload -U compinit && compinit` to your `.zshrc`
+
 # Credits
 
 Almost none of this is my original work, so all the credit belongs to these people:

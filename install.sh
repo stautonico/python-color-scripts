@@ -23,6 +23,7 @@ check_root_priv() {
 install_files() {
   install /tmp/python-color-scripts/python-colorscript /usr/bin/ -m 775 -o root -g root
   install -D /tmp/python-color-scripts/art.json /etc/python-colorscript/art.json -m 644 -o root -g root
+  install -D /tmp/python-color-scripts/_python-colorscript /usr/share/zsh/functions/Completion/Unix/_python-colorscript -m 644 -o root -g root
 }
 
 verify_install() {

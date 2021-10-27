@@ -9,7 +9,7 @@ import zlib
 from json import loads
 from random import choice
 from shutil import rmtree
-from subprocess import DEVNULL, STDOUT, check_call
+from subprocess import STDOUT, check_call
 
 import requests
 
@@ -73,8 +73,8 @@ if __name__ == '__main__':
         data = loads(f.read())
 
     parser = argparse.ArgumentParser(description="Draw some ASCII art!")
-    parser.add_argument("--16", dest="sixteen", action="store_true", help="Draw in 16 colors mode")
-    parser.add_argument("--256", dest="twofiftysix", action="store_true", help="Draw in 256 colors mode")
+    parser.add_argument("--16", dest="sixteen", action="store_true", help="Draw in 16 color mode")
+    parser.add_argument("--256", dest="twofiftysix", action="store_true", help="Draw in 256 color mode")
     parser.add_argument('--left-padding', "-l", dest="left_padding", type=int, required=False,
                         help='Amount of space to add to the left side of the art', default=0)
     parser.add_argument('--top-padding', "-t", dest="top_padding", type=int, required=False,
@@ -114,29 +114,30 @@ if __name__ == '__main__':
 
             if old:
                 print("An update is available! {} -> {}".format(__VERSION__, latest_version))
-                print("Downloading new version...")
-                check_call(
-                    ["wget", "{}".format(response.json()['tarball_url']), "-O", "/tmp/python-colorscript.tar.gz"],
-                    stdout=DEVNULL, stderr=STDOUT)
-                print("Extracting...")
-                check_call(["tar", "-xzvf", "/tmp/python-colorscript.tar.gz", "-C", "/tmp"], stdout=DEVNULL,
-                           stderr=STDOUT)
-                # Find the name of the new file
-                new_filenames = [file for file in os.listdir("/tmp/") if
-                                 file.startswith("stautonico-python-color-scripts")]
-                if len(new_filenames) != 1:
-                    print("Something went wrong when trying to update!")
-                    exit(1)
-                else:
-                    # Copy the script and the art.json file
-                    print("Installing..")
-                    check_call(
-                        ["cp", "/tmp/{}/python-colorscript".format(new_filenames[0]), "/usr/bin/python-colorscript"],
-                        stdout=DEVNULL, stderr=STDOUT)
-                    check_call(["cp", "/tmp/{}/art.json".format(new_filenames[0]), "/etc/python-colorscript/art.json"],
-                               stdout=DEVNULL, stderr=STDOUT)
-
-                    print("Successfully updated to version {}!".format(latest_version))
+                check_call("wget -qO - https://raw.githubusercontent.com/stautonico/python-color-scripts/main/install.sh | sudo bash", stdout=STDOUT, stderr=STDOUT)
+                # print("Downloading new version...")
+                # check_call(
+                #     ["wget", "{}".format(response.json()['tarball_url']), "-O", "/tmp/python-colorscript.tar.gz"],
+                #     stdout=DEVNULL, stderr=STDOUT)
+                # print("Extracting...")
+                # check_call(["tar", "-xzvf", "/tmp/python-colorscript.tar.gz", "-C", "/tmp"], stdout=DEVNULL,
+                #            stderr=STDOUT)
+                # # Find the name of the new file
+                # new_filenames = [file for file in os.listdir("/tmp/") if
+                #                  file.startswith("stautonico-python-color-scripts")]
+                # if len(new_filenames) != 1:
+                #     print("Something went wrong when trying to update!")
+                #     exit(1)
+                # else:
+                #     # Copy the script and the art.json file
+                #     print("Installing..")
+                #     check_call(
+                #         ["cp", "/tmp/{}/python-colorscript".format(new_filenames[0]), "/usr/bin/python-colorscript"],
+                #         stdout=DEVNULL, stderr=STDOUT)
+                #     check_call(["cp", "/tmp/{}/art.json".format(new_filenames[0]), "/etc/python-colorscript/art.json"],
+                #                stdout=DEVNULL, stderr=STDOUT)
+                #
+                #     print("Successfully updated to version {}!".format(latest_version))
             else:
                 print("Your software is up to date! ({})".format(__VERSION__))
             exit()
@@ -179,6 +180,9 @@ if __name__ == '__main__':
 
             if distro.lower() != "arch":
                 choices.remove("archbtw")
+
+            if distro.lower() != "debian":
+                choices.remove("debian")
 
         if args.notsus:
             choices.remove("sus")

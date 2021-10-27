@@ -1,0 +1,24 @@
+#compdef python-colorscript
+
+_arguments -S : \
+        "--help[Show the help message]" \
+        "-h[Show the help message]" \
+        "--16[Draw in 16 color mode]" \
+        "--256[Draw in 256 color mode]" \
+        "--left-padding[Amount of space to add to the left side of the art]:int:" \
+        "-l[Amount of space to add to the left side of the art]:int:" \
+        "--top-padding[Amount of space to add to the top of the art]:int:" \
+        "-t[Amount of space to add to the top of the art]:int:" \
+        "--art[Draw a specific piece of art. View all using --list]:model:(creeper blackmage questionmarkblock mushroom greenmushroom heart sus archbtw bunny egg menacing yinyang skull colorbars megaman debian manjaro)" \
+        "--list[List the names of all available art pieces]" \
+        "--random-color-mode[Use a random color mode]" \
+        "-r[Use a random color mode]" \
+        "--not-sus[Guarantees you won't be the imposter]" \
+        "--ignore-distro[Show distro specific art on all distros]" \
+        "-i[Show distro specific art on all distros]" \
+        "--blacklist[Remove specific artworks from random pool. Note: Multiple items need to be surrounded by quotes]" \
+        "-b[Remove specific artworks from random pool. Note: Multiple items need to be surrounded by quotes]" \
+        "--version[Show version information]" \
+        "-v[Show version information]" \
+        "--update[Try to update to the latest version]" \
+        "--uninstall[Uninstall the script from your system]"

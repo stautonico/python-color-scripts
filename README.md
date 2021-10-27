@@ -14,11 +14,14 @@ people use it when their terminal opens. This is a modified/custom version of th
 
 # Installation
 
+**Note: You must have `pip` installed**
+
 Installation is easy, just a simple one-liner.
 
 ```shell
 wget -qO - https://raw.githubusercontent.com/stautonico/python-color-scripts/main/install.sh | sudo bash
 ```
+
 
 # Updating
 
@@ -82,6 +85,8 @@ To uninstall, simply:
 sudo python-colorscript --uninstall
 ```
 
+Note: Uninstalling does not remove `/etc/python-colorscript/art.json`, so manual changes will be saved next time you install. If you wish to remove it, you can manually do so after uninstalling.
+
 # Adding New Art
 
 Since the printing of this art is all handled by kui's amazing [ANSI Pixels](https://kui.github.io/ansi_pixels) tool,
@@ -128,3 +133,4 @@ Almost none of this is my original work, so all the credit belongs to these peop
 * `egg`: [Nintendo](https://www.nintendo.com/)
 * `menacing`: [Araki Hirohiko](https://jojo.fandom.com/wiki/Hirohiko_Araki)
 * `skull`: [Stock Unlimited](https://www.stockunlimited.com/vector-illustration/pixel-art-gaming-skull-head_2022273.html)
+* `megaman`: [Mega Man](https://www.capcom.com/)

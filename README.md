@@ -115,7 +115,7 @@ You can add your art to this repo by submitting a pull request with your changes
 
 # Troubleshooting
 ### ZSH Completions Not Working
-* Make sure /usr/share/zsh/functions/Completion/Unix/_python-colorscript exists
+* Make sure `/usr/share/zsh/functions/Completion/Unix/_python-colorscript` exists
 * Add `autoload -U compinit && compinit` to your `.zshrc`
 
 # Credits
@@ -139,3 +139,4 @@ Almost none of this is my original work, so all the credit belongs to these peop
 * `menacing`: [Araki Hirohiko](https://jojo.fandom.com/wiki/Hirohiko_Araki)
 * `skull`: [Stock Unlimited](https://www.stockunlimited.com/vector-illustration/pixel-art-gaming-skull-head_2022273.html)
 * `megaman`: [Mega Man](https://www.capcom.com/)
+* `boo`: [Nintendo](https://www.nintendo.com/)

@@ -126,6 +126,7 @@ if __name__ == '__main__':
         else:
             rmtree("/etc/python-colorscript")
             os.remove("/usr/bin/python-colorscript")
+            # TODO: Remove zsh completions file
             print("Thanks for using python-colorscript!")
             exit()
 
@@ -155,11 +156,15 @@ if __name__ == '__main__':
                 except FileNotFoundError:
                     distro = "Generic"
 
+            # Remove distro specific art
             if distro.lower() != "arch":
                 choices.remove("archbtw")
 
             if distro.lower() != "debian":
                 choices.remove("debian")
+
+            if distro.lower() not in ["manjaro", "manjarolinux"]:
+                choices.remove("manjaro")
 
         if args.notsus:
             choices.remove("sus")

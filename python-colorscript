@@ -9,7 +9,6 @@ import zlib
 from json import loads
 from random import choice
 from shutil import rmtree
-from subprocess import STDOUT, DEVNULL, check_call
 
 import requests
 
@@ -114,11 +113,8 @@ if __name__ == '__main__':
 
             if old:
                 print("An update is available! {} -> {}".format(__VERSION__, latest_version))
-                check_call(
-                    "wget -qO /tmp/install-python-colorscript.sh https://raw.githubusercontent.com/stautonico/python-color-scripts/main/install.sh",
-                    stdout=DEVNULL, stderr=STDOUT)
-                check_call("chmod +x /tmp/install-python-colorscript.sh", stdout=DEVNULL, stderr=STDOUT)
-                check_call("sudo /tmp/install-python-colorscript.sh", stdout=STDOUT, stderr=STDOUT)
+                os.system(
+                    "wget -qO - https://raw.githubusercontent.com/stautonico/python-color-scripts/main/install.sh | sudo bash")
             else:
                 print("Your software is up to date! ({})".format(__VERSION__))
             exit()

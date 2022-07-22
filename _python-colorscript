@@ -16,6 +16,7 @@ _arguments -S : \
         "--not-sus[Guarantees you won't be the imposter]" \
         "--ignore-distro[Show distro specific art on all distros]" \
         "-i[Show distro specific art on all distros]" \
+        "--add-art[Interactively add new art]" \
         "--blacklist[Remove specific artworks from random pool. Note: Multiple items need to be surrounded by quotes]" \
         "-b[Remove specific artworks from random pool. Note: Multiple items need to be surrounded by quotes]" \
         "--version[Show version information]" \

@@ -291,8 +291,13 @@ def install_zsh_autocomplete():
         exit(1)
     # Write the autocomplete
     try:
-        shutil.copy2(temp_filename, ZSH_AUTOCOMPLETE_PATH)
         open(os.path.join(CONFIG_DIR, "._python-colorscript"), "w").write(open(AUTOCOMPLETE_LOCATION, "r").read())
+    except Exception as e:
+        debug(e, line())
+        err("Failed to write autocomplete template")
+        exit(1)
+    try:
+        shutil.copy2(temp_filename, ZSH_AUTOCOMPLETE_PATH)
     except FileNotFoundError as e:
         debug(e, line())
         err("Failed to install autocomplete, file not found")

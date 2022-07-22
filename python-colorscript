@@ -168,24 +168,19 @@ if __name__ == '__main__':
         exit()
 
     if args.update:
-        if os.getuid() != 0:
-            print("Only root has the permissions to update the required files, please run with sudo")
-            exit()
+        response = requests.get("https://api.github.com/repos/stautonico/python-color-scripts/releases/latest")
+
+        latest_version = response.json()["tag_name"]
+
+        old = is_outdated(latest_version, __VERSION__)
+
+        if old:
+            print("An update is available! {} -> {}".format(__VERSION__, latest_version))
+            os.system(
+                "wget -qO - https://raw.githubusercontent.com/stautonico/python-color-scripts/main/install | /usr/bin/env python3")
         else:
-            response = requests.get("https://api.github.com/repos/stautonico/python-color-scripts/releases/latest")
-
-            latest_version = response.json()["tag_name"]
-
-            old = is_outdated(latest_version, __VERSION__)
-
-            if old:
-                print("An update is available! {} -> {}".format(__VERSION__, latest_version))
-                # TODO: Change this with the proper update script
-                os.system(
-                    "wget -qO - https://raw.githubusercontent.com/stautonico/python-color-scripts/main/install.sh | sudo bash")
-            else:
-                print("Your software is up to date! ({})".format(__VERSION__))
-            exit()
+            print("Your software is up to date! ({})".format(__VERSION__))
+        exit()
 
     if args.uninstall:
         if os.path.exists(EXECUTABLE_PATH):

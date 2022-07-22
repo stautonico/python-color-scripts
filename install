@@ -105,8 +105,8 @@ def pre_install_tasks():
             err("Failed to clone repo")
             exit(1)
 
-        # Move to the cloned directory
-        os.chdir("python-color-scripts")
+    # Move to the cloned directory
+    os.chdir("python-color-scripts")
 
     # Install dependencies
     info("Installing dependencies...")

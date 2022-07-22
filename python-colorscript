@@ -22,7 +22,7 @@ ZSH_AUTOCOMPLETE_TEMPLATE = os.path.join(CONFIG_DIR, "._python-colorscript")
 # TODO: Add the ability to use a custom config location
 # TODO: Add debug mode
 
-__VERSION__ = "2.0.0"
+__VERSION__ = "2.1.0"
 
 
 # This portion of the script belongs to the user "kui" (https://github.com/kui) on github
@@ -276,7 +276,9 @@ if __name__ == '__main__':
 
     if args.list:
         print("Available art pieces:")
-        for x in data.keys():
+        art_names = list(data.keys())
+        art_names.sort()
+        for x in art_names:
             print(x)
         exit()
 

@@ -31,7 +31,7 @@ This script has a built-in updater.
 To update, simply:
 
 ```shell
-sudo python-colorscript --update
+python-colorscript --update
 ```
 
 If a new version exists, it will automatically install.
@@ -86,10 +86,11 @@ You can add this file to the end of your .zshrc or .bashrc to get some ASCII art
 To uninstall, simply:
 
 ```shell
-sudo python-colorscript --uninstall
+python-colorscript --uninstall
 ```
 
-Note: Uninstalling does not remove `~/.config/python-colorscript/`, so manual changes will be saved next time you install. If you wish to remove it, you can manually do so after uninstalling.
+Note: Uninstalling does not remove `~/.config/python-colorscript/`, so manual changes will be saved next time you
+install. If you wish to remove it, you can manually do so after uninstalling.
 
 # Adding New Art
 
@@ -134,6 +135,10 @@ Also, note that at least one color mode is required, but not all three need to b
 9. Enter the URL for the artwork in 256 color mode and hit `Enter`
 
 You can add your art to this repo by submitting a pull request with your changes.
+Note that any art that is submitted in a pull request needs to:
+
+* Be your own work (or have credits in the readme)
+* **Must** have art for all three color modes (to make sure it works on all terminals)
 
 # Troubleshooting
 
@@ -149,6 +154,7 @@ You can add your art to this repo by submitting a pull request with your changes
     * Check with `stat ~/.local/bin/python-colorscript`
 
 ### "command 'python' not found"
+
 * In this case, `python` is either not installed or not an alias of `python3`
 * Try running the one liner with `python3` instead of `python` AKA try:
     * `wget -qO - https://raw.githubusercontent.com/stautonico/python-color-scripts/main/install | python3`
@@ -175,3 +181,7 @@ Almost none of this is my original work, so all the credit belongs to these peop
 * `skull`: [Stock Unlimited](https://www.stockunlimited.com/vector-illustration/pixel-art-gaming-skull-head_2022273.html)
 * `megaman`: [Mega Man](https://www.capcom.com/)
 * `boo`: [Nintendo](https://www.nintendo.com/)
+* `pokeball` [The Pokémon Company](https://www.pokemon.com/us/)
+* `penguin` [Nicole Marie T](https://opengameart.org/content/cute-retro-pixel-penguin-16x16)
+* `deadpool` [Marvel](https://www.marvel.com/)
+* `overwatch` [Blizzard Entertainment](https://www.blizzard.com/)

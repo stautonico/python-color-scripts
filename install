@@ -99,6 +99,10 @@ def run_system_command(command, verbose=False):
 
 
 def pre_install_tasks():
+    # Check if pip is installed
+    if shutil.which("pip") is None:
+        err("pip is not installed")
+        exit(1)
     # Some code to run before the install starts
     # We need to git clone the repo if we're not running from a clone
     if not os.path.exists("./{}".format(PROG_NAME)):

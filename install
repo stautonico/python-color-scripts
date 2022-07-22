@@ -7,6 +7,7 @@ import shutil
 import tempfile
 from json import loads, dumps
 import subprocess
+from inspect import currentframe, getframeinfo
 
 PROG_NAME = "python-colorscript"  # Just to reduce the possiblity of typos
 LOCAL_BIN_PATH = os.path.join(os.path.expanduser("~"), ".local", "bin")
@@ -22,6 +23,7 @@ def make_flags():
     INSTALL_ZSH_AUTOCOMPLETE = True
     VERBOSE = False
     KEEP_REPO = False
+    DEUBG = False
 
     for arg in sys.argv[1:]:
         if arg == "--confirm-overwrite" or arg == "-c":
@@ -32,11 +34,14 @@ def make_flags():
             VERBOSE = True
         elif arg == "--keep-repo" or arg == "-k":
             KEEP_REPO = True
+        elif arg == "--debug" or arg == "-d":
+            DEBUG = True
+            VERBOSE = True
 
-    return CONFIRM_OVERWRITE, INSTALL_ZSH_AUTOCOMPLETE, VERBOSE, KEEP_REPO
+    return CONFIRM_OVERWRITE, INSTALL_ZSH_AUTOCOMPLETE, VERBOSE, KEEP_REPO, DEUBG
 
 
-CONFIRM_OVERWRITE, INSTALL_ZSH_AUTOCOMPLETE, VERBOSE, KEEP_REPO = make_flags()
+CONFIRM_OVERWRITE, INSTALL_ZSH_AUTOCOMPLETE, VERBOSE, KEEP_REPO, DEBUG = make_flags()
 
 
 class Colors:
@@ -44,6 +49,7 @@ class Colors:
     OK = '\033[92m'
     WARN = '\033[93m'
     FAIL = '\033[91m'
+    DEBUG = '\033[95m'
     RESET = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
@@ -65,6 +71,18 @@ def success(txt):
     print(f"{Colors.OK}{Colors.BOLD}[+] SUCCESS: {Colors.RESET}{Colors.OK}{txt}{Colors.RESET}")
 
 
+def line():
+    return getframeinfo(currentframe()).lineno
+
+
+def debug(txt, line_num=None):
+    if DEBUG:
+        output = f"{Colors.DEBUG}{Colors.BOLD}[D] DEBUG: {Colors.RESET}{Colors.DEBUG}{txt}{Colors.RESET}"
+        if line_num is not None:
+            output += f" (line {line_num})"
+        print(output)
+
+
 def run_system_command(command, verbose=False):
     return subprocess.run(command, shell=True, capture_output=not verbose).returncode
 
@@ -80,7 +98,7 @@ def pre_install_tasks():
         if os.path.exists("python-color-scripts") and not KEEP_REPO:
             info("Removing existing repo...")
             shutil.rmtree("python-color-scripts")
-            
+
         # Clone the repo
         result = run_system_command("git clone https://github.com/stautonico/python-color-scripts", VERBOSE)
         if result != 0:
@@ -109,7 +127,8 @@ def install_executable():
         warn("{} does not exist, creating...".format(LOCAL_BIN_PATH))
         try:
             os.makedirs(LOCAL_BIN_PATH)
-        except Exception:
+        except Exception as e:
+            debug(e, line())
             err("Failed to make {}, try manually creating it before installing again".format(LOCAL_BIN_PATH))
             exit(1)
 
@@ -133,13 +152,16 @@ def install_executable():
         shutil.copy2(EXECUTABLE_LOCATION, LOCAL_BIN_PATH)
         # Should be executable, but just make sure
         os.chmod(os.path.join(LOCAL_BIN_PATH, PROG_NAME), os.stat(INSTALLED_EXECUTABLE_PATH).st_mode | stat.S_IEXEC)
-    except FileNotFoundError:
+    except FileNotFoundError as e:
+        debug(e, line())
         err("Failed to install executable, file not found")
         exit(1)
-    except PermissionError:
+    except PermissionError as e:
+        debug(e, line())
         err("Failed to install executable, permission error")
         exit(1)
-    except Exception:
+    except Exception as e:
+        debug(e, line())
         err("Failed to install executable, unknown error")
         exit(1)
 
@@ -160,7 +182,8 @@ def install_config():
     if not os.path.exists(CONFIG_DIR):
         try:
             os.makedirs(CONFIG_DIR)
-        except Exception:
+        except Exception as e:
+            debug(e, line())
             err("Failed to create config directory ({})".format(CONFIG_DIR))
             exit(1)
 
@@ -196,17 +219,20 @@ def install_config():
 
         try:
             open(CONFIG_LOCATION, "w").write(dumps(existing_config))
-        except Exception:
+        except Exception as e:
+            debug(e, line())
             err("Failed to write config file")
             exit(1)
     else:
         # We don't have an existing config so just copy the new one
         try:
             shutil.copy2(CONFIG_LOCATION, CONFIG_DIR)
-        except FileNotFoundError:
+        except FileNotFoundError as e:
+            debug(e, line())
             err("Failed to install config, file not found")
             exit(1)
-        except Exception:
+        except Exception as e:
+            debug(e, line())
             err("Failed to install config, unknown error")
             exit(1)
 
@@ -238,10 +264,12 @@ def install_zsh_autocomplete():
     # Write the autocomplete
     try:
         open(ZSH_AUTOCOMPLETE_PATH, "w").write(autocomplete_template)
-    except FileNotFoundError:
+    except FileNotFoundError as e:
+        debug(e, line())
         err("Failed to install autocomplete, file not found")
         exit(1)
-    except PermissionError:
+    except PermissionError as e:
+        debug(e, line())
         admin_command = find_admin_command()
         if admin_command is None:
             err("Failed to install autocomplete, could not retry because sudo or doas is not installed (or was not found)")
@@ -252,7 +280,8 @@ def install_zsh_autocomplete():
             temp_filename = tempfile.mktemp()
             try:
                 open(temp_filename, "w").write(autocomplete_template)
-            except Exception:
+            except Exception as e:
+                debug(e, line())
                 err("Failed to write to temp file")
                 exit(1)
 

@@ -1,0 +1,358 @@
+#!/usr/bin/env python3
+from __future__ import print_function
+import sys
+import os
+import stat
+import shutil
+import tempfile
+from json import loads, dumps
+import subprocess
+from inspect import currentframe, getframeinfo
+
+PROG_NAME = "python-colorscript"  # Just to reduce the possibility of typos
+LOCAL_BIN_PATH = os.path.join(os.path.expanduser("~"), ".local", "bin")
+INSTALLED_EXECUTABLE_PATH = os.path.join(LOCAL_BIN_PATH, PROG_NAME)
+CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", PROG_NAME)
+ART_CONFIG_PATH = os.path.join(CONFIG_DIR, "art.json")
+ZSH_AUTOCOMPLETE_PATH = os.path.join("/", "usr", "share", "zsh", "functions", "Completion", "Unix",
+                                     "_python-colorscript")
+
+
+class Colors:
+    INFO = '\033[94m'
+    OK = '\033[92m'
+    WARN = '\033[93m'
+    FAIL = '\033[91m'
+    DEBUG = '\033[95m'
+    RESET = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
+def err(txt):
+    print(f"{Colors.FAIL}{Colors.BOLD}[X] ERROR: {Colors.RESET}{Colors.FAIL}{txt}{Colors.RESET}", file=sys.stderr)
+
+
+def warn(txt):
+    print(f"{Colors.WARN}{Colors.BOLD}[-] WARNING: {Colors.RESET}{Colors.WARN}{txt}{Colors.RESET}", file=sys.stderr)
+
+
+def info(txt):
+    print(f"{Colors.INFO}{Colors.BOLD}[~] INFO: {Colors.RESET}{Colors.INFO}{txt}{Colors.RESET}")
+
+
+def success(txt):
+    print(f"{Colors.OK}{Colors.BOLD}[+] SUCCESS: {Colors.RESET}{Colors.OK}{txt}{Colors.RESET}")
+
+
+def line():
+    return getframeinfo(currentframe()).lineno
+
+
+# Flags (have to be defined after the output functions but before the debug function
+# since it uses the 'DEBUG' flag)
+def make_flags():
+    CONFIRM_OVERWRITE = False
+    INSTALL_ZSH_AUTOCOMPLETE = True
+    VERBOSE = False
+    KEEP_REPO = False
+    DEBUG = False
+
+    for arg in sys.argv[1:]:
+        if arg == "--confirm-overwrite" or arg == "-c":
+            CONFIRM_OVERWRITE = True
+        elif arg == "--no-zsh-autocomplete" or arg == "-z":
+            INSTALL_ZSH_AUTOCOMPLETE = False
+        elif arg == "--verbose" or arg == "-v":
+            VERBOSE = True
+        elif arg == "--keep-repo" or arg == "-k":
+            KEEP_REPO = True
+        elif arg == "--debug" or arg == "-d":
+            DEBUG = True
+            VERBOSE = True
+        elif arg == "--help" or arg == "-h":
+            print(
+                "Usage: ./install [--confirm-overwrite | -c] [--no-zsh-autocomplete | -z] [--verbose | -v] [--keep-repo | -k] [--debug | -d] [--help | -h]")
+            exit(0)
+        else:
+            err("Unknown argument: '{}'".format(arg))
+            exit(1)
+
+    return CONFIRM_OVERWRITE, INSTALL_ZSH_AUTOCOMPLETE, VERBOSE, KEEP_REPO, DEBUG
+
+
+CONFIRM_OVERWRITE, INSTALL_ZSH_AUTOCOMPLETE, VERBOSE, KEEP_REPO, DEBUG = make_flags()
+
+
+def debug(txt, line_num=None):
+    if DEBUG:
+        output = f"{Colors.DEBUG}{Colors.BOLD}[D] DEBUG: {Colors.RESET}{Colors.DEBUG}{txt}{Colors.RESET}"
+        if line_num is not None:
+            output += f" (line {line_num})"
+        print(output)
+
+
+def run_system_command(command, verbose=False):
+    # We need shell to use full commands, but we need to use the current directory, so we'll just cd first
+    command = "cd {} && {}".format(os.getcwd(), command)
+    return subprocess.run(command, shell=True, capture_output=not verbose).returncode
+
+
+def pre_install_tasks():
+    # Some code to run before the install starts
+    # We need to git clone the repo if we're not running from a clone
+    if not os.path.exists("./{}".format(PROG_NAME)):
+        info("Cloning repo...")
+        # If /tmp doesn't exist, this will fail, but it' s your own fault
+        os.chdir("/tmp")
+        # Check if we have a git repo, if so, remove it (unless we have the "KEEP_REPO" option)
+        if os.path.exists("python-color-scripts") and not KEEP_REPO:
+            info("Removing existing repo...")
+            shutil.rmtree("python-color-scripts")
+
+        # Clone the repo
+        result = run_system_command(
+            "{} clone https://github.com/stautonico/python-color-scripts".format(shutil.which("git")), VERBOSE)
+        if result != 0:
+            err("Failed to clone repo")
+            exit(1)
+
+        # Move to the cloned directory
+        os.chdir("python-color-scripts")
+
+    # Install dependencies
+    info("Installing dependencies...")
+    result = run_system_command("{} install -r requirements.txt".format(shutil.which("pip")), VERBOSE)
+    if result != 0:
+        err("Failed to install dependencies (probably because pip isn't installed)")
+        exit(1)
+
+
+def post_install_tasks():
+    # Remove the temporary directory (if we're not running from a clone)
+    if not os.path.exists("./{}".format(PROG_NAME)):
+        info("Removing temporary directory...")
+        os.chdir("/tmp")
+        shutil.rmtree("python-color-scripts")
+
+
+def install_executable():
+    # Make sure the ~/.local/bin exists (should, but might not in some obsecure distros)
+    if not os.path.exists(LOCAL_BIN_PATH):
+        warn("{} does not exist, creating...".format(LOCAL_BIN_PATH))
+        try:
+            os.makedirs(LOCAL_BIN_PATH)
+        except Exception as e:
+            debug(e, line())
+            err("Failed to make {}, try manually creating it before installing again".format(LOCAL_BIN_PATH))
+            exit(1)
+
+        success("Successfully created {}".format(LOCAL_BIN_PATH))
+
+    # Try to find the location of the binary (will change depening on if the user manually cloned or if its the one-liner)
+    # One-liner (should be /tmp/python-color-scripts/python-colorscript)
+    if os.path.exists("/tmp/python-color-scripts/{}".format(PROG_NAME)):
+        EXECUTABLE_LOCATION = "/tmp/python-color-scripts/{}".format(PROG_NAME)
+
+    # Manually cloned (and running with ./install)
+    elif os.path.exists("./{}".format(PROG_NAME)):
+        EXECUTABLE_LOCATION = "./{}".format(PROG_NAME)
+
+    else:
+        err("Something went wrong when installing (couldn't find executable)")
+        exit(1)
+
+    # Try to copy the executable to LOCAL_BIN_PATH
+    try:
+        shutil.copy2(EXECUTABLE_LOCATION, LOCAL_BIN_PATH)
+        # Should be executable, but just make sure
+        os.chmod(os.path.join(LOCAL_BIN_PATH, PROG_NAME), os.stat(INSTALLED_EXECUTABLE_PATH).st_mode | stat.S_IEXEC)
+    except FileNotFoundError as e:
+        debug(e, line())
+        err("Failed to install executable, file not found")
+        exit(1)
+    except PermissionError as e:
+        debug(e, line())
+        err("Failed to install executable, permission error")
+        exit(1)
+    except Exception as e:
+        debug(e, line())
+        err("Failed to install executable, unknown error")
+        exit(1)
+
+
+def install_config():
+    if os.path.exists("/tmp/python-color-scripts/art.json"):
+        CONFIG_LOCATION = "/tmp/python-color-scripts/arg.json"
+
+    # Manually cloned (and running with ./install)
+    elif os.path.exists("./art.json"):
+        CONFIG_LOCATION = "./art.json"
+
+    else:
+        err("Something went wrong when installing (couldn't find config)")
+        exit(1)
+
+    # Check if an existing config exists
+    if not os.path.exists(CONFIG_DIR):
+        try:
+            os.makedirs(CONFIG_DIR)
+        except Exception as e:
+            debug(e, line())
+            err("Failed to create config directory ({})".format(CONFIG_DIR))
+            exit(1)
+
+    if os.path.exists("/tmp/python-color-scripts/art.json"):
+        CONFIG_LOCATION = "/tmp/python-color-scripts/art.json"
+
+    # Manually cloned (and running with ./install)
+    elif os.path.exists("./art.json"):
+        CONFIG_LOCATION = "./art.json"
+
+    else:
+        err("Something went wrong when installing (couldn't find config)")
+        exit(1)
+
+    if os.path.exists(ART_CONFIG_PATH):
+        # If it does, we need to try to merge our new config with the user's one
+        # This is so we don't override their custom artwork (if they have)
+        existing_config = loads(open(ART_CONFIG_PATH, "r").read())
+        new_config = loads(open(CONFIG_LOCATION, "r").read())
+
+        # Go through each key and check the difference between the values
+        for key, value in new_config.items():
+            # Check if this key already exists in the existing config
+            if key in existing_config.keys():
+                # Check if the content is any different
+                if (existing_config[key] != value) and CONFIRM_OVERWRITE:
+                    # Ask the user to confirm
+                    result = input("Overwrite artwork '{}'? [y/N]".format(key))
+                    if result.lower() != "y":
+                        continue
+
+                existing_config[key] = value
+
+        try:
+            open(CONFIG_LOCATION, "w").write(dumps(existing_config))
+        except Exception as e:
+            debug(e, line())
+            err("Failed to write config file")
+            exit(1)
+    else:
+        # We don't have an existing config so just copy the new one
+        try:
+            shutil.copy2(CONFIG_LOCATION, CONFIG_DIR)
+        except FileNotFoundError as e:
+            debug(e, line())
+            err("Failed to install config, file not found")
+            exit(1)
+        except Exception as e:
+            debug(e, line())
+            err("Failed to install config, unknown error")
+            exit(1)
+
+
+def find_admin_command():
+    # Check if we should use sudo or doas
+    return "sudo" if shutil.which("sudo") is not None else "doas" if shutil.which("doas") is not None else None
+
+
+def install_zsh_autocomplete():
+    if os.path.exists("/tmp/python-color-scripts/_python-colorscript"):
+        AUTOCOMPLETE_LOCATION = "/tmp/python-color-scripts/_python-colorscript"
+
+    # Manually cloned (and running with ./install)
+    elif os.path.exists("./_python-colorscript"):
+        AUTOCOMPLETE_LOCATION = "./_python-colorscript"
+
+    else:
+        err("Something went wrong when installing (couldn't find autocomplete)")
+        exit(1)
+
+    # Just check if zsh is installed, if it's not, don't bother installing, even if the flag is set
+    if shutil.which("zsh") is None:
+        warn("zsh is not installed, skipping autocomplete")
+        return
+
+    # Config should have been installed by now, so we don't need to bother checking if it exists
+    config = loads(open(ART_CONFIG_PATH, "r").read())
+    # Get the list of artworks
+    artworks = config.keys()
+    # Generate the autocomplete
+    autocomplete_template = open(AUTOCOMPLETE_LOCATION, "r").read()
+    autocomplete_template = autocomplete_template.replace("<ARTWORKS>", " ".join(artworks))
+    # Open a temp file and write the autocomplete to it
+    temp_filename = tempfile.mktemp()
+    try:
+        open(temp_filename, "w").write(autocomplete_template)
+    except Exception as e:
+        debug(e, line())
+        err("Failed to write to temp file")
+        exit(1)
+    # Write the autocomplete
+    try:
+        open(os.path.join(CONFIG_DIR, "._python-colorscript"), "w").write(open(AUTOCOMPLETE_LOCATION, "r").read())
+    except Exception as e:
+        debug(e, line())
+        err("Failed to write autocomplete template")
+        exit(1)
+    try:
+        shutil.copy2(temp_filename, ZSH_AUTOCOMPLETE_PATH)
+    except FileNotFoundError as e:
+        debug(e, line())
+        err("Failed to install autocomplete, file not found")
+        exit(1)
+    except PermissionError as e:
+        debug(e, line())
+        admin_command = find_admin_command()
+        if admin_command is None:
+            err("Failed to install autocomplete, could not retry because sudo or doas is not installed (or was not found)")
+            exit(1)
+        else:
+            print("Failed to install, zsh auto-complete file, trying with {}...".format(admin_command))
+
+            # Try to copy the temp file to the correct location
+            result = run_system_command("{} cp {} {}".format(admin_command, temp_filename, ZSH_AUTOCOMPLETE_PATH),
+                                        VERBOSE)
+            if result != 0:
+                err("Failed to install autocomplete, could not copy to {}".format(ZSH_AUTOCOMPLETE_PATH))
+                exit(1)
+
+
+def validate():
+    if not os.path.exists(INSTALLED_EXECUTABLE_PATH):
+        err("Failed to validate, executable not found")
+        exit(1)
+
+    if not os.path.exists(ART_CONFIG_PATH):
+        err("Failed to validate, config not found")
+        exit(1)
+
+    if not os.path.exists(ZSH_AUTOCOMPLETE_PATH) and INSTALL_ZSH_AUTOCOMPLETE:
+        err("Failed to validate, zsh autocomplete not found")
+        exit(1)
+
+
+if __name__ == '__main__':
+    pre_install_tasks()
+
+    info("Installing executable...")
+    install_executable()
+    success("Installed executable!")
+
+    info("Installing config...")
+    install_config()
+    success("Installed config!")
+
+    if INSTALL_ZSH_AUTOCOMPLETE:
+        info("Installing zsh autocomplete...")
+        install_zsh_autocomplete()
+        success("Installed zsh autocomplete!")
+
+    info("Validating install...")
+    validate()
+    success("Install validated!")
+
+    post_install_tasks()
+
+    info("Installation complete! :)")

@@ -9,13 +9,14 @@ _arguments -S : \
         "-l[Amount of space to add to the left side of the art]:int:" \
         "--top-padding[Amount of space to add to the top of the art]:int:" \
         "-t[Amount of space to add to the top of the art]:int:" \
-        "--art[Draw a specific piece of art. View all using --list]:model:(creeper blackmage questionmarkblock mushroom greenmushroom heart sus archbtw bunny egg menacing yinyang skull colorbars megaman debian manjaro android boo)" \
+        "--art[Draw a specific piece of art. View all using --list]:model:(<ARTWORKS>)" \
         "--list[List the names of all available art pieces]" \
         "--random-color-mode[Use a random color mode]" \
         "-r[Use a random color mode]" \
         "--not-sus[Guarantees you won't be the imposter]" \
         "--ignore-distro[Show distro specific art on all distros]" \
         "-i[Show distro specific art on all distros]" \
+        "--add-art[Interactively add new art]" \
         "--blacklist[Remove specific artworks from random pool. Note: Multiple items need to be surrounded by quotes]" \
         "-b[Remove specific artworks from random pool. Note: Multiple items need to be surrounded by quotes]" \
         "--version[Show version information]" \

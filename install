@@ -14,8 +14,7 @@ LOCAL_BIN_PATH = os.path.join(os.path.expanduser("~"), ".local", "bin")
 INSTALLED_EXECUTABLE_PATH = os.path.join(LOCAL_BIN_PATH, PROG_NAME)
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", PROG_NAME)
 ART_CONFIG_PATH = os.path.join(CONFIG_DIR, "art.json")
-ZSH_AUTOCOMPLETE_PATH = os.path.join("usr", "share", "zsh", "functions", "Completion", "Unix")
-
+ZSH_AUTOCOMPLETE_PATH = os.path.join("/", "usr", "share", "zsh", "functions", "Completion", "Unix")
 
 
 class Colors:
@@ -48,6 +47,7 @@ def success(txt):
 def line():
     return getframeinfo(currentframe()).lineno
 
+
 # Flags (have to be defined after the output functions but before the debug function
 # since it uses the 'DEBUG' flag)
 def make_flags():
@@ -55,7 +55,7 @@ def make_flags():
     INSTALL_ZSH_AUTOCOMPLETE = True
     VERBOSE = False
     KEEP_REPO = False
-    DEUBG = False
+    DEBUG = False
 
     for arg in sys.argv[1:]:
         if arg == "--confirm-overwrite" or arg == "-c":
@@ -69,11 +69,14 @@ def make_flags():
         elif arg == "--debug" or arg == "-d":
             DEBUG = True
             VERBOSE = True
+        elif arg == "--help" or arg == "-h":
+            print("Usage: {} [--confirm-overwrite | -c] [--no-zsh-autocomplete | -z] [--verbose | -v] [--keep-repo | -k] [--debug | -d] [--help | -h]".format(PROG_NAME))
+            exit(0)
         else:
             err("Unknown argument: '{}'".format(arg))
             exit(1)
 
-    return CONFIRM_OVERWRITE, INSTALL_ZSH_AUTOCOMPLETE, VERBOSE, KEEP_REPO, DEUBG
+    return CONFIRM_OVERWRITE, INSTALL_ZSH_AUTOCOMPLETE, VERBOSE, KEEP_REPO, DEBUG
 
 
 CONFIRM_OVERWRITE, INSTALL_ZSH_AUTOCOMPLETE, VERBOSE, KEEP_REPO, DEBUG = make_flags()
@@ -106,7 +109,8 @@ def pre_install_tasks():
             shutil.rmtree("python-color-scripts")
 
         # Clone the repo
-        result = run_system_command("{} clone https://github.com/stautonico/python-color-scripts".format(shutil.which("git")), VERBOSE)
+        result = run_system_command(
+            "{} clone https://github.com/stautonico/python-color-scripts".format(shutil.which("git")), VERBOSE)
         if result != 0:
             err("Failed to clone repo")
             exit(1)
@@ -269,7 +273,7 @@ def install_zsh_autocomplete():
     artworks = config.keys()
     # Generate the autocomplete
     autocomplete_template = open(AUTOCOMPLETE_LOCATION, "r").read()
-    autocomplete_template = autocomplete_template.replace("<ARTWORKS>}", " ".join(artworks))
+    autocomplete_template = autocomplete_template.replace("<ARTWORKS>", " ".join(artworks))
     # Open a temp file and write the autocomplete to it
     temp_filename = tempfile.mktemp()
     try:
@@ -295,7 +299,8 @@ def install_zsh_autocomplete():
             print("Failed to install, zsh auto-complete file, trying with {}...".format(admin_command))
 
             # Try to copy the temp file to the correct location
-            result = os.system("{} cp {} {}".format(admin_command, temp_filename, ZSH_AUTOCOMPLETE_PATH))
+            result = run_system_command("{} cp {} {}".format(admin_command, temp_filename, ZSH_AUTOCOMPLETE_PATH),
+                                        VERBOSE)
             if result != 0:
                 err("Failed to install autocomplete, could not copy to {}".format(ZSH_AUTOCOMPLETE_PATH))
                 exit(1)

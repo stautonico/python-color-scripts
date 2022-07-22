@@ -1,0 +1,150 @@
+#!/usr/bin/env python3
+from __future__ import print_function
+import sys
+import os
+import stat
+import shutil
+from json import loads, dumps
+
+PROG_NAME = "python-colorscript"  # Just to reduce the possiblity of typos
+LOCAL_BIN_PATH = os.path.join(os.path.expanduser("~"), ".local", "bin")
+INSTALLED_EXECUTABLE_PATH = os.path.join(LOCAL_BIN_PATH, PROG_NAME)
+CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", PROG_NAME)
+ART_CONFIG_PATH = os.path.join(CONFIG_DIR, "art.json")
+
+# Flags
+CONFIRM_OVERWRITE = False
+INSTALL_ZSH_AUTOCOMPLETE = True
+
+class Colors:
+    INFO = '\033[94m'
+    OK = '\033[92m'
+    WARN = '\033[93m'
+    FAIL = '\033[91m'
+    RESET = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+def err(txt):
+    print(f"{Colors.FAIL}{Colors.BOLD}[X] ERROR: {Colors.RESET}{Colors.FAIL}{txt}{Colors.RESET}", file=sys.stderr)
+
+def warn(txt):
+    print(f"{Colors.WARN}{Colors.BOLD}[-] WARNING: {Colors.RESET}{Colors.WARN}{txt}{Colors.RESET}", file=sys.stderr)
+
+def info(txt):
+    print(f"{Colors.INFO}{Colors.BOLD}[~] INFO: {Colors.RESET}{Colors.INFO}{txt}{Colors.RESET}")
+
+def success(txt):
+    print(f"{Colors.OK}{Colors.BOLD}[+] SUCCESS: {Colors.RESET}{Colors.OK}{txt}{Colors.RESET}")
+
+
+def install_binary():
+    # Make sure the ~/.local/bin exists (should, but might not in some obsecure distros)
+    if not os.path.exists(LOCAL_BIN_PATH):
+        warn("{} does not exist, creating...".format(LOCAL_BIN_PATH))
+        try:
+            os.makedirs(LOCAL_BIN_PATH)
+        except Exception:
+            err("Failed to make {}, try manually creating it before installing again".format(LOCAL_BIN_PATH))
+            exit(1)
+
+        success("Successfully created {}".format(LOCAL_BIN_PATH))
+
+    # Try to find the location of the binary (will change depening on if the user manually cloned or if its the one-liner)
+    # One-liner (should be /tmp/python-color-scripts/python-colorscript)
+    if os.path.exists("/tmp/python-color-scripts/{}".format(PROG_NAME)):
+        EXECUTABLE_LOCATION = "/tmp/python-color-scripts/{}".format(PROG_NAME)
+
+    # Manually cloned (and running with ./install)
+    elif os.path.exists("./{}".format(PROG_NAME)):
+        EXECUTABLE_LOCATION = "./{}".format(PROG_NAME)
+
+    else:
+        err("Something went wrong when installing (couldn't find executable)")
+        exit(1)
+
+    # Try to copy the executable to LOCAL_BIN_PATH
+    try:
+        shutil.copy2(EXECUTABLE_LOCATION, LOCAL_BIN_PATH)
+        # Should be executable, but just make sure
+        os.chmod(os.path.join(LOCAL_BIN_PATH, PROG_NAME), os.stat(INSTALLED_EXECUTABLE_PATH).st_mode | stat.S_IEXEC)
+    except FileNotFoundError:
+        err("Failed to install executable, file not found")
+        exit(1)
+    except PermissionError:
+        err("Failed to install executable, permission error")
+        exit(1)
+    except Exception:
+        err("Failed to install executable, unknown error")
+        exit(1)
+
+def install_config():
+    if os.path.exists("/tmp/python-color-scripts/art.json"):
+        CONFIG_LOCATION = "/tmp/python-color-scripts/arg.json"
+
+    # Manually cloned (and running with ./install)
+    elif os.path.exists("./art.json"):
+        CONFIG_LOCATION = "./art.json"
+
+    else:
+        err("Something went wrong when installing (couldn't find config)")
+        exit(1)
+
+    # Check if an existing config exists
+    if not os.path.exists(CONFIG_DIR):
+        try:
+            os.makedirs(CONFIG_DIR)
+        except Exception:
+            err("Failed to create config directory ({})".format(CONFIG_DIR))
+            exit(1)
+
+    if os.path.exists("/tmp/python-color-scripts/art.json"):
+        CONFIG_LOCATION = "/tmp/python-color-scripts/art.json"
+
+    # Manually cloned (and running with ./install)
+    elif os.path.exists("./art.json"):
+        CONFIG_LOCATION = "./art.json"
+
+    else:
+        err("Something went wrong when installing (couldn't find config)")
+        exit(1)
+
+    if os.path.exists(ART_CONFIG_PATH):
+        # If it does, we need to try to merge our new config with the user's one
+        # This is so we don't override their custom artwork (if they have)
+        existing_config = loads(open(ART_CONFIG_PATH, "r").read())
+        new_config = loads(open(CONFIG_LOCATION, "r").read())
+
+        # Go through each key and check the difference between the values
+        for key, value in new_config.items():
+            # Check if this key already exists in the existing config
+            if key in existing_config.keys():
+                # Check if the content is any different
+                if (exiting_config[key] != value) and CONFIRM_OVERWRITE:
+                    # Ask the user to confirm
+                    result = input("Overwrite artwork '{}'? [y/N]".format(key))
+                    if result.lower() != "y":
+                        continue
+
+                existing_config[key] = value
+    else:
+        # We don't have an existing config so just copy the new one
+        try:
+            shutil.copy2(CONFIG_LOCATION, CONFIG_DIR)
+        except FileNotFoundError:
+            err("Failed to install config, file not found")
+            exit(1)
+        except Exception:
+            err("Failed to install config, unknown error")
+            exit(1)
+
+
+def install_zsh_autocomplete():
+    if INSTALL_ZSH_AUTOCOMPLETE:
+        pass
+
+
+
+install_binary()
+install_config()
+

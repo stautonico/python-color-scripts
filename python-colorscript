@@ -8,9 +8,20 @@ import sys
 import zlib
 from json import loads
 from random import choice
-from shutil import rmtree
-
+from shutil import rmtree, which
+from pathlib import Path
 import requests
+
+CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "python-colorscript")
+ART_CONFIG = os.path.join(CONFIG_DIR, "art.json")
+EXECUTABLE_PATH = Path(__file__).resolve()
+ZSH_AUTOCOMPLETE = os.path.join("usr", "share", "zsh", "functions", "Completion", "Unix", "_python-colorscript")
+
+# TODO: Check for missing config file in main program
+# TODO: Add new --add-art flag (so the user doesn't have to manually edit the config)
+# TODO: Update the zsh autocomplete (if it exists) after adding new art
+# TODO: Make the installer update zsh autocomplete (if it exists)
+# TODO: Add the ability to use a custom config location
 
 __VERSION__ = "1.1.0"
 
@@ -66,8 +77,8 @@ def is_outdated(latest, current):
 
 
 if __name__ == '__main__':
-    artjson_location = "art.json" if os.getenv(
-        "PYTHONCOLORSCRIPTDEBUG") == "true" else "/etc/python-colorscript/art.json"
+    artjson_location = "./art.json" if os.getenv(
+        "PYTHONCOLORSCRIPTDEBUG") == "true" else os.path.join(os.path.expanduser("~"), ".config", "python-colorscript", "art.json")
     with open(artjson_location, "r") as f:
         data = loads(f.read())
 
@@ -113,6 +124,7 @@ if __name__ == '__main__':
 
             if old:
                 print("An update is available! {} -> {}".format(__VERSION__, latest_version))
+                # TODO: Change this with the proper update script
                 os.system(
                     "wget -qO - https://raw.githubusercontent.com/stautonico/python-color-scripts/main/install.sh | sudo bash")
             else:
@@ -120,15 +132,44 @@ if __name__ == '__main__':
             exit()
 
     if args.uninstall:
-        if os.getuid() != 0:
-            print("Only root has the permissions to delete the required files, please run with sudo")
-            exit()
-        else:
-            rmtree("/etc/python-colorscript")
-            os.remove("/usr/bin/python-colorscript")
-            # TODO: Remove zsh completions file
-            print("Thanks for using python-colorscript!")
-            exit()
+        if os.path.exists(EXECUTABLE_PATH):
+            try:
+                os.remove(EXECUTABLE_PATH)
+            except Exception:
+                print("Failed to remove {}".format(EXECUTABLE_PATH))
+                exit(1)
+
+        if os.path.exists(CONFIG_DIR):
+            try:
+                rmtree(CONFIG_DIR)
+            except Exception:
+                print("Failed to remove {}".format(CONFIG_DIR))
+                exit(1)
+
+        if os.path.exists(ZSH_AUTOCOMPLETE):
+            try:
+                os.remove(ZSH_AUTOCOMPLETE)
+            except PermissionError:
+                # Check if we should use sudo or doas
+                admin_command = "sudo" if which("sudo") is not None else "doas" if which("doas") is not None else None
+
+                #if which("sudo") is not None:
+                #    admin_comamnd = "sudo"
+                #else if which("doas") is not None:
+                #    admin_command = "doas"
+                #else:
+                #    admin_comamnd = None
+                if admin_command is None:
+                    print("Failed to find sudo or doas, please install one of these two or manually remove {}".format(ZSH_AUTOCOMPLETE))
+                    exit(1)
+                else:
+                    print("Failed to remove, zsh auto-complete file, trying with {}...".format(admin_command))
+                    result = os.system("{} rm {}".format(admin_command, ZSH_AUTOCOMPLETE))
+                    if result != 0:
+                        print("Failed to remove zsh auto-complete, continuing...")
+
+        print("Thanks for using python-colorscript!")
+        exit()
 
     if args.list:
         print("Available art pieces:")

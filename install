@@ -100,7 +100,7 @@ def pre_install_tasks():
             shutil.rmtree("python-color-scripts")
 
         # Clone the repo
-        result = run_system_command("git clone https://github.com/stautonico/python-color-scripts", VERBOSE)
+        result = run_system_command("{} clone https://github.com/stautonico/python-color-scripts".format(shutil.which("git")), VERBOSE)
         if result != 0:
             err("Failed to clone repo")
             exit(1)

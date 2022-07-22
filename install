@@ -17,35 +17,6 @@ ART_CONFIG_PATH = os.path.join(CONFIG_DIR, "art.json")
 ZSH_AUTOCOMPLETE_PATH = os.path.join("usr", "share", "zsh", "functions", "Completion", "Unix")
 
 
-# Flags
-def make_flags():
-    CONFIRM_OVERWRITE = False
-    INSTALL_ZSH_AUTOCOMPLETE = True
-    VERBOSE = False
-    KEEP_REPO = False
-    DEUBG = False
-
-    for arg in sys.argv[1:]:
-        if arg == "--confirm-overwrite" or arg == "-c":
-            CONFIRM_OVERWRITE = True
-        elif arg == "--no-zsh-autocomplete" or arg == "-z":
-            INSTALL_ZSH_AUTOCOMPLETE = False
-        elif arg == "--verbose" or arg == "-v":
-            VERBOSE = True
-        elif arg == "--keep-repo" or arg == "-k":
-            KEEP_REPO = True
-        elif arg == "--debug" or arg == "-d":
-            DEBUG = True
-            VERBOSE = True
-        else:
-            err("Unknown argument: '{}'".format(arg))
-            exit(1)
-
-    return CONFIRM_OVERWRITE, INSTALL_ZSH_AUTOCOMPLETE, VERBOSE, KEEP_REPO, DEUBG
-
-
-CONFIRM_OVERWRITE, INSTALL_ZSH_AUTOCOMPLETE, VERBOSE, KEEP_REPO, DEBUG = make_flags()
-
 
 class Colors:
     INFO = '\033[94m'
@@ -76,6 +47,36 @@ def success(txt):
 
 def line():
     return getframeinfo(currentframe()).lineno
+
+# Flags (have to be defined after the output functions but before the debug function
+# since it uses the 'DEBUG' flag)
+def make_flags():
+    CONFIRM_OVERWRITE = False
+    INSTALL_ZSH_AUTOCOMPLETE = True
+    VERBOSE = False
+    KEEP_REPO = False
+    DEUBG = False
+
+    for arg in sys.argv[1:]:
+        if arg == "--confirm-overwrite" or arg == "-c":
+            CONFIRM_OVERWRITE = True
+        elif arg == "--no-zsh-autocomplete" or arg == "-z":
+            INSTALL_ZSH_AUTOCOMPLETE = False
+        elif arg == "--verbose" or arg == "-v":
+            VERBOSE = True
+        elif arg == "--keep-repo" or arg == "-k":
+            KEEP_REPO = True
+        elif arg == "--debug" or arg == "-d":
+            DEBUG = True
+            VERBOSE = True
+        else:
+            err("Unknown argument: '{}'".format(arg))
+            exit(1)
+
+    return CONFIRM_OVERWRITE, INSTALL_ZSH_AUTOCOMPLETE, VERBOSE, KEEP_REPO, DEUBG
+
+
+CONFIRM_OVERWRITE, INSTALL_ZSH_AUTOCOMPLETE, VERBOSE, KEEP_REPO, DEBUG = make_flags()
 
 
 def debug(txt, line_num=None):
@@ -269,9 +270,17 @@ def install_zsh_autocomplete():
     # Generate the autocomplete
     autocomplete_template = open(AUTOCOMPLETE_LOCATION, "r").read()
     autocomplete_template = autocomplete_template.replace("<ARTWORKS>}", " ".join(artworks))
+    # Open a temp file and write the autocomplete to it
+    temp_filename = tempfile.mktemp()
+    try:
+        open(temp_filename, "w").write(autocomplete_template)
+    except Exception as e:
+        debug(e, line())
+        err("Failed to write to temp file")
+        exit(1)
     # Write the autocomplete
     try:
-        open(ZSH_AUTOCOMPLETE_PATH, "w").write(autocomplete_template)
+        shutil.copy2(temp_filename, ZSH_AUTOCOMPLETE_PATH)
     except FileNotFoundError as e:
         debug(e, line())
         err("Failed to install autocomplete, file not found")
@@ -284,14 +293,6 @@ def install_zsh_autocomplete():
             exit(1)
         else:
             print("Failed to install, zsh auto-complete file, trying with {}...".format(admin_command))
-            # Open a temp file and write the autocomplete to it
-            temp_filename = tempfile.mktemp()
-            try:
-                open(temp_filename, "w").write(autocomplete_template)
-            except Exception as e:
-                debug(e, line())
-                err("Failed to write to temp file")
-                exit(1)
 
             # Try to copy the temp file to the correct location
             result = os.system("{} cp {} {}".format(admin_command, temp_filename, ZSH_AUTOCOMPLETE_PATH))

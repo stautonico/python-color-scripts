@@ -11,6 +11,8 @@ people use it when their terminal opens. This is a modified/custom version of th
 # Dependencies
 
 - python3 (theoretically, this should work with python2, but I'm not actively testing that)
+- pip
+- requests (automatically installed if you don't have it)
 
 # Installation
 
@@ -21,7 +23,6 @@ Installation is easy, just a simple one-liner.
 ```shell
 wget -qO - https://raw.githubusercontent.com/stautonico/python-color-scripts/main/install.sh | sudo bash
 ```
-
 
 # Updating
 
@@ -40,6 +41,7 @@ If a new version exists, it will automatically install.
 The simplest way to get started is just to type `python-colorscript` in your terminal to display a random artwork!
 
 ### Command Options
+
 ```shell
 usage: python-colorscript [-h] [--16] [--256] [--left-padding LEFT_PADDING] [--top-padding TOP_PADDING] [--art ART]
                           [--list] [--random-color-mode] [--ignore-distro] [--blacklist BLACKLIST] [--version]
@@ -69,7 +71,8 @@ optional arguments:
 
 and more secret arguments that you'll just have to discover on your own!
 
-**Note that in the 8 and 16 color modes, your terminal's color scheme is used, which may result in strange-looking artwork
+**Note that in the 8 and 16 color modes, your terminal's color scheme is used, which may result in strange-looking
+artwork
 depending on the colors you have set. For the "best" visual representation, use the 256 color mode by including `--256`
 in your command**
 
@@ -85,7 +88,8 @@ To uninstall, simply:
 sudo python-colorscript --uninstall
 ```
 
-Note: Uninstalling does not remove `/etc/python-colorscript/art.json`, so manual changes will be saved next time you install. If you wish to remove it, you can manually do so after uninstalling.
+Note: Uninstalling does not remove `/etc/python-colorscript/art.json`, so manual changes will be saved next time you
+install. If you wish to remove it, you can manually do so after uninstalling.
 
 # Adding New Art
 
@@ -100,23 +104,33 @@ that is how you generate the art.
 5. Add it to the `/etc/python-colorscript/art.json` file (use the existing artwork entries as a template)
 
 Note: The format of `art.json` is as follows:
+
 ```json
 {
-    "artwork_name": {
-        "8": "the base64 for the artwork in 8 color mode",
-        "16": "the base64 for the artwork in 16 color mode",
-        "256": "the base64 for the artwork in 256 color mode",
-    }
+  "artwork_name": {
+    "8": "the base64 for the artwork in 8 color mode",
+    "16": "the base64 for the artwork in 16 color mode",
+    "256": "the base64 for the artwork in 256 color mode"
+  }
 }
 ```
+
 Also, note that at least one color mode is required, but not all three need to be specified.
 
 You can add your art to this repo by submitting a pull request with your changes.
 
 # Troubleshooting
+
 ### ZSH Completions Not Working
+
 * Make sure `/usr/share/zsh/functions/Completion/Unix/_python-colorscript` exists
 * Add `autoload -U compinit && compinit` to your `.zshrc`
+
+### "command not found"
+
+* Make sure you have `~/.local/bin` in your `$PATH` (the executable is installed here)
+* Manually verify that `~/.local/bin/python-colorscript` exists and is executable
+    * Check with `stat ~/.local/bin/python-colorscript`
 
 # Credits
 

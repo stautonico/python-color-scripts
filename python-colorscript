@@ -6,7 +6,7 @@ import base64
 import os
 import sys
 import zlib
-from json import loads
+from json import loads, dumps
 from random import choice
 from shutil import rmtree, which
 from pathlib import Path
@@ -15,15 +15,14 @@ import requests
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", "python-colorscript")
 ART_CONFIG = os.path.join(CONFIG_DIR, "art.json")
 EXECUTABLE_PATH = Path(__file__).resolve()
-ZSH_AUTOCOMPLETE = os.path.join("usr", "share", "zsh", "functions", "Completion", "Unix", "_python-colorscript")
+ZSH_AUTOCOMPLETE = os.path.join("/", "usr", "share", "zsh", "functions", "Completion", "Unix", "_python-colorscript")
+ZSH_AUTOCOMPLETE_TEMPLATE = os.path.join(CONFIG_DIR, "._python-colorscript")
 
-# TODO: Check for missing config file in main program
-# TODO: Add new --add-art flag (so the user doesn't have to manually edit the config)
-# TODO: Update the zsh autocomplete (if it exists) after adding new art
-# TODO: Make the installer update zsh autocomplete (if it exists)
+# TODO: Create a non-interactive --add-art flag
 # TODO: Add the ability to use a custom config location
+# TODO: Add debug mode
 
-__VERSION__ = "1.1.0"
+__VERSION__ = "1.2.0"
 
 
 # This portion of the script belongs to the user "kui" (https://github.com/kui) on github
@@ -76,11 +75,66 @@ def is_outdated(latest, current):
     return latest > current
 
 
+def validate_art_url(url):
+    if not url.startswith("https://kui.github.io/ansi_pixels/#"):
+        return False
+    else:
+        return url.replace("https://kui.github.io/ansi_pixels/#", "")
+
+
+def save_config(data):
+    with open(ART_CONFIG, "w") as f:
+        f.write(dumps(data))
+
+
+def update_zsh_autocomplete(data):
+    if not os.path.exists(ZSH_AUTOCOMPLETE):
+        return
+
+    try:
+        print(ZSH_AUTOCOMPLETE_TEMPLATE)
+        with open(ZSH_AUTOCOMPLETE_TEMPLATE, "r") as f:
+            template = f.read()
+    except Exception:
+        print("Failed to read zsh autocomplete template")
+        return
+
+    try:
+        with open(ZSH_AUTOCOMPLETE, "w") as f:
+            f.write(template.replace("<ARTWORKS>", " ".join(data.keys())))
+    except Exception:
+        print("Failed to write zsh autocomplete")
+        admin_command = "sudo" if which("sudo") is not None else "doas" if which("doas") is not None else None
+        if not admin_command:
+            print("Can't retry, sudo or doas is not installed (or not found)")
+            return
+        # Make a temp file to write to
+        temp_filename = os.path.join(CONFIG_DIR, "temp_zsh_autocomplete")
+        with open(temp_filename, "w") as f:
+            f.write(template.replace("<ARTWORKS>", " ".join(data.keys())))
+        print("Trying again with {}...".format(admin_command))
+        result = os.system("{} cp {} {}".format(admin_command, temp_filename, ZSH_AUTOCOMPLETE))
+        # Remove the temp file
+        os.remove(temp_filename)
+        if result != 0:
+            print("Failed to copy zsh autocomplete")
+            return
+        return
+
 if __name__ == '__main__':
     artjson_location = "./art.json" if os.getenv(
-        "PYTHONCOLORSCRIPTDEBUG") == "true" else os.path.join(os.path.expanduser("~"), ".config", "python-colorscript", "art.json")
+        "PYTHONCOLORSCRIPTDEBUG") == "true" else ART_CONFIG
+
+    if not os.path.exists(artjson_location):
+        print("Could not find art.json config file. Please run the installer.")
+        sys.exit(1)
+
     with open(artjson_location, "r") as f:
-        data = loads(f.read())
+        try:
+            data = loads(f.read())
+        except Exception:
+            print("Config is invalid (JSON syntax error)")
+            exit(1)
 
     parser = argparse.ArgumentParser(description="Draw some ASCII art!")
     parser.add_argument("--16", dest="sixteen", action="store_true", help="Draw in 16 color mode")
@@ -100,6 +154,8 @@ if __name__ == '__main__':
                         help="Show distro specific artworks on all distros")
     parser.add_argument("--blacklist", "-b",
                         help="Remove specific artworks from random pool. Note: Multiple items need to be surrounded by quotes")
+    parser.add_argument("--add-art", action="store_true", dest="addart", required=False,
+                        help="Interactively add new art")
     parser.add_argument("--version", "-V", action="store_true", required=False, help="Show version information")
     parser.add_argument("--update", action="store_true", required=False, help="Try to update to the latest version")
     parser.add_argument("--uninstall", action="store_true", required=False,
@@ -153,14 +209,9 @@ if __name__ == '__main__':
                 # Check if we should use sudo or doas
                 admin_command = "sudo" if which("sudo") is not None else "doas" if which("doas") is not None else None
 
-                #if which("sudo") is not None:
-                #    admin_comamnd = "sudo"
-                #else if which("doas") is not None:
-                #    admin_command = "doas"
-                #else:
-                #    admin_comamnd = None
                 if admin_command is None:
-                    print("Failed to find sudo or doas, please install one of these two or manually remove {}".format(ZSH_AUTOCOMPLETE))
+                    print("Failed to find sudo or doas, please install one of these two or manually remove {}".format(
+                        ZSH_AUTOCOMPLETE))
                     exit(1)
                 else:
                     print("Failed to remove, zsh auto-complete file, trying with {}...".format(admin_command))
@@ -169,6 +220,58 @@ if __name__ == '__main__':
                         print("Failed to remove zsh auto-complete, continuing...")
 
         print("Thanks for using python-colorscript!")
+        exit()
+
+    if args.addart:
+        print("To add new art, please visit https://kui.github.io/ansi_pixels and create a new art piece.")
+        print("Once you have created the art piece, copy the URL from the browser bar and paste it here")
+        print("You can create up to three piece of art, one using each color mode (8, 16, and 256)")
+        print("You may use the same link for each color mode if you want to use the same colors for each mode")
+        while True:
+            name = input("Name of the art piece: ")
+            if name == "":
+                print("Name cannot be empty!")
+                continue
+            if name in data.keys():
+                print("Name already exists!")
+                continue
+
+            name = name.lower()
+
+            # Valid name
+            break
+
+        base64_8, base64_16, base64_256 = None, None, None
+        while True:
+            base64_8 = validate_art_url(input("URL of the art piece (8 color mode): "))
+            if base64_8 is not False:
+                break
+            else:
+                print("Invalid URL, please try again")
+
+        while True:
+            base64_16 = validate_art_url(input("URL of the art piece (16 color mode): "))
+            if base64_16 is not False:
+                break
+            else:
+                print("Invalid URL, please try again")
+
+        while True:
+            base64_256 = validate_art_url(input("URL of the art piece (256 color mode): "))
+            if base64_256 is not False:
+                break
+            else:
+                print("Invalid URL, please try again")
+
+        data[name] = {
+            "8": base64_8,
+            "16": base64_16,
+            "256": base64_256
+        }
+
+        save_config(data)
+        update_zsh_autocomplete(data)
+        print("Art piece added!")
         exit()
 
     if args.list:

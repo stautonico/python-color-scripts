@@ -9,12 +9,13 @@ from json import loads, dumps
 import subprocess
 from inspect import currentframe, getframeinfo
 
-PROG_NAME = "python-colorscript"  # Just to reduce the possiblity of typos
+PROG_NAME = "python-colorscript"  # Just to reduce the possibility of typos
 LOCAL_BIN_PATH = os.path.join(os.path.expanduser("~"), ".local", "bin")
 INSTALLED_EXECUTABLE_PATH = os.path.join(LOCAL_BIN_PATH, PROG_NAME)
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", PROG_NAME)
 ART_CONFIG_PATH = os.path.join(CONFIG_DIR, "art.json")
-ZSH_AUTOCOMPLETE_PATH = os.path.join("/", "usr", "share", "zsh", "functions", "Completion", "Unix")
+ZSH_AUTOCOMPLETE_PATH = os.path.join("/", "usr", "share", "zsh", "functions", "Completion", "Unix",
+                                     "_python-colorscript")
 
 
 class Colors:
@@ -70,7 +71,8 @@ def make_flags():
             DEBUG = True
             VERBOSE = True
         elif arg == "--help" or arg == "-h":
-            print("Usage: {} [--confirm-overwrite | -c] [--no-zsh-autocomplete | -z] [--verbose | -v] [--keep-repo | -k] [--debug | -d] [--help | -h]".format(PROG_NAME))
+            print(
+                "Usage: ./install [--confirm-overwrite | -c] [--no-zsh-autocomplete | -z] [--verbose | -v] [--keep-repo | -k] [--debug | -d] [--help | -h]")
             exit(0)
         else:
             err("Unknown argument: '{}'".format(arg))
@@ -266,6 +268,11 @@ def install_zsh_autocomplete():
     else:
         err("Something went wrong when installing (couldn't find autocomplete)")
         exit(1)
+
+    # Just check if zsh is installed, if it's not, don't bother installing, even if the flag is set
+    if shutil.which("zsh") is None:
+        warn("zsh is not installed, skipping autocomplete")
+        return
 
     # Config should have been installed by now, so we don't need to bother checking if it exists
     config = loads(open(ART_CONFIG_PATH, "r").read())

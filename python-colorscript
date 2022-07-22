@@ -22,7 +22,7 @@ ZSH_AUTOCOMPLETE_TEMPLATE = os.path.join(CONFIG_DIR, "._python-colorscript")
 # TODO: Add the ability to use a custom config location
 # TODO: Add debug mode
 
-__VERSION__ = "1.2.0"
+__VERSION__ = "2.0.0"
 
 
 # This portion of the script belongs to the user "kui" (https://github.com/kui) on github

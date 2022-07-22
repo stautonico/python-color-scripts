@@ -112,7 +112,7 @@ def pre_install_tasks():
 
     # Install dependencies
     info("Installing dependencies...")
-    result = run_system_command("/usr/bin/env pip install -r requirements.txt", VERBOSE)
+    result = run_system_command("{} install -r requirements.txt".format(shutil.which("pip")), VERBOSE)
     if result != 0:
         err("Failed to install dependencies (probably because pip isn't installed)")
         exit(1)

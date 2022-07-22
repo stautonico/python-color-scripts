@@ -14,7 +14,7 @@ LOCAL_BIN_PATH = os.path.join(os.path.expanduser("~"), ".local", "bin")
 INSTALLED_EXECUTABLE_PATH = os.path.join(LOCAL_BIN_PATH, PROG_NAME)
 CONFIG_DIR = os.path.join(os.path.expanduser("~"), ".config", PROG_NAME)
 ART_CONFIG_PATH = os.path.join(CONFIG_DIR, "art.json")
-ZSH_AUTOCOMPLETE_PATH = os.path.join("usr", "share", "zsh", "functions", "Completion", "Unix", "_python-colorscript")
+ZSH_AUTOCOMPLETE_PATH = os.path.join("usr", "share", "zsh", "functions", "Completion", "Unix")
 
 
 # Flags
@@ -37,6 +37,9 @@ def make_flags():
         elif arg == "--debug" or arg == "-d":
             DEBUG = True
             VERBOSE = True
+        else:
+            err("Unknown argument: '{}'".format(arg))
+            exit(1)
 
     return CONFIRM_OVERWRITE, INSTALL_ZSH_AUTOCOMPLETE, VERBOSE, KEEP_REPO, DEUBG
 
@@ -214,7 +217,7 @@ def install_config():
             # Check if this key already exists in the existing config
             if key in existing_config.keys():
                 # Check if the content is any different
-                if (exiting_config[key] != value) and CONFIRM_OVERWRITE:
+                if (existing_config[key] != value) and CONFIRM_OVERWRITE:
                     # Ask the user to confirm
                     result = input("Overwrite artwork '{}'? [y/N]".format(key))
                     if result.lower() != "y":

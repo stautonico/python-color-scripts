@@ -21,6 +21,7 @@ def make_flags():
     CONFIRM_OVERWRITE = False
     INSTALL_ZSH_AUTOCOMPLETE = True
     VERBOSE = False
+    KEEP_REPO = False
 
     for arg in sys.argv[1:]:
         if arg == "--confirm-overwrite" or arg == "-c":
@@ -29,11 +30,13 @@ def make_flags():
             INSTALL_ZSH_AUTOCOMPLETE = False
         elif arg == "--verbose" or arg == "-v":
             VERBOSE = True
+        elif arg == "--keep-repo" or arg == "-k":
+            KEEP_REPO = True
 
-    return CONFIRM_OVERWRITE, INSTALL_ZSH_AUTOCOMPLETE, VERBOSE
+    return CONFIRM_OVERWRITE, INSTALL_ZSH_AUTOCOMPLETE, VERBOSE, KEEP_REPO
 
 
-CONFIRM_OVERWRITE, INSTALL_ZSH_AUTOCOMPLETE, VERBOSE = make_flags()
+CONFIRM_OVERWRITE, INSTALL_ZSH_AUTOCOMPLETE, VERBOSE, KEEP_REPO = make_flags()
 
 
 class Colors:
@@ -73,6 +76,12 @@ def pre_install_tasks():
         info("Cloning repo...")
         # If /tmp doesn't exist, this will fail, but it' s your own fault
         os.chdir("/tmp")
+        # Check if we have a git repo, if so, remove it (unless we have the "KEEP_REPO" option)
+        if os.path.exists("python-color-scripts") and not KEEP_REPO:
+            info("Removing existing repo...")
+            shutil.rmtree("python-color-scripts")
+            
+        # Clone the repo
         result = run_system_command("git clone https://github.com/stautonico/python-color-scripts", VERBOSE)
         if result != 0:
             err("Failed to clone repo")
@@ -82,7 +91,7 @@ def pre_install_tasks():
     info("Installing dependencies...")
     result = run_system_command("/usr/bin/env pip install -r requirements.txt", VERBOSE)
     if result != 0:
-        err("Failed to install dependencies")
+        err("Failed to install dependencies (probably because pip isn't installed)")
         exit(1)
 
 

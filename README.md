@@ -21,7 +21,7 @@ people use it when their terminal opens. This is a modified/custom version of th
 Installation is easy, just a simple one-liner.
 
 ```shell
-wget -qO - https://raw.githubusercontent.com/stautonico/python-color-scripts/main/install.sh | sudo bash
+wget -qO - https://raw.githubusercontent.com/stautonico/python-color-scripts/main/install | python
 ```
 
 # Updating
@@ -147,6 +147,11 @@ You can add your art to this repo by submitting a pull request with your changes
 * Make sure you have `~/.local/bin` in your `$PATH` (the executable is installed here)
 * Manually verify that `~/.local/bin/python-colorscript` exists and is executable
     * Check with `stat ~/.local/bin/python-colorscript`
+
+### "command 'python' not found"
+* In this case, `python` is either not installed or not an alias of `python3`
+* Try running the one liner with `python3` instead of `python` AKA try:
+    * `wget -qO - https://raw.githubusercontent.com/stautonico/python-color-scripts/main/install | python3`
 
 # Credits
 
